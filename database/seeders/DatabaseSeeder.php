@@ -27,5 +27,7 @@ class DatabaseSeeder extends Seeder
             'password' => 'password',
             'role' => 'cashier',
         ]);
+                $this->call(MasterDataSeeder::class);
+                
     }
 }
