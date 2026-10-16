@@ -30,7 +30,7 @@ class Console extends Model
         return $this->hasMany(RentalSession::class, 'console_id');
     }
 
-    /** Sesi yang sedang berjalan di meja ini (kalau ada). */
+   
     public function activeSession(): HasOne
     {
         return $this->hasOne(RentalSession::class, 'console_id')
