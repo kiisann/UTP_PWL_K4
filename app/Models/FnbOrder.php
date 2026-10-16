@@ -24,7 +24,7 @@ class FnbOrder extends Model
         ];
     }
 
-    /** NULL kalau pembelian langsung (walk-in). */
+    
     public function rentalSession(): BelongsTo
     {
         return $this->belongsTo(RentalSession::class, 'rental_session_id');

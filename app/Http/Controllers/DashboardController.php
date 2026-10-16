@@ -19,7 +19,7 @@ class DashboardController extends Controller
             'maintenance' => $consoles->where('status', Console::MAINTENANCE)->count(),
         ];
 
-        // Shift yang sedang berjalan (nanti diganti logika shift milik Sultan)
+        
         $activeShift = CashierShift::open()->with('user')->latest('opened_at')->first();
 
         return view('dashboard.index', compact('consoles', 'summary', 'activeShift'));

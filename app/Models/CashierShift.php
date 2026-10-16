@@ -51,7 +51,7 @@ class CashierShift extends Model
         return $this->hasMany(Payment::class, 'shift_id');
     }
 
-    /** Shift yang masih berjalan (belum ditutup). */
+    
     public function scopeOpen(Builder $query): Builder
     {
         return $query->whereNull('closed_at');
