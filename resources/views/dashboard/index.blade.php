@@ -6,9 +6,22 @@
     {{-- Header atas: dikerjakan Sultan --}}
     @include('dashboard._header')
 
-    {{-- State "selected" dipakai bersama oleh grid (kiri) dan panel tagihan (kanan) --}}
-    <div x-data="{ selected: null }" class="flex min-h-0 flex-1">
+    {{-- Pesan hasil aksi --}}
+    @if (session('status'))
+        <div class="bg-green-600 px-5 py-2 text-sm text-white">{{ session('status') }}</div>
+    @endif
+    @if (session('error'))
+        <div class="bg-red-600 px-5 py-2 text-sm text-white">{{ session('error') }}</div>
+    @endif
+    @if ($errors->any())
+        <div class="bg-red-600 px-5 py-2 text-sm text-white">{{ $errors->first() }}</div>
+    @endif
 
+    {{-- State bersama: selected = kartu yang diklik, modal = jendela aksi yang terbuka --}}
+    <div
+        x-data="{ selected: null, modal: null, mode: 'package', packages: @js($packages), available: @js($availableConsoles) }"
+        class="flex min-h-0 flex-1"
+    >
         {{-- Panel kiri 70%: grid kartu meja --}}
         <main class="w-[70%] overflow-y-auto p-4">
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
@@ -24,5 +37,109 @@
 
         {{-- Panel kanan 30%: detail tagihan & pembayaran, dikerjakan Niko --}}
         @include('dashboard._billing-panel')
+
+        {{-- Jendela aksi: Mulai Main / Tambah Waktu / Pindah Meja --}}
+        <div
+            x-show="modal" x-cloak
+            @keydown.escape.window="modal = null"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+        >
+            <div @click.outside="modal = null" class="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl">
+
+                {{-- MULAI MAIN --}}
+                <template x-if="modal && modal.type === 'start'">
+                    <form method="POST" action="{{ route('sessions.start') }}" class="space-y-3">
+                        @csrf
+                        <h3 class="text-lg font-bold">Mulai Main: <span x-text="modal.console.name"></span></h3>
+                        <input type="hidden" name="console_id" :value="modal.console.id">
+
+                        <div>
+                            <label class="text-sm font-medium">Nama pelanggan</label>
+                            <input type="text" name="customer_name" maxlength="100" placeholder="Opsional"
+                                   class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2">
+                        </div>
+
+                        <div>
+                            <label class="text-sm font-medium">Mode</label>
+                            <select name="billing_mode" x-model="mode" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2">
+                                <option value="package">Paket Waktu (hitung mundur)</option>
+                                <option value="open">Open Bill (hitung maju)</option>
+                            </select>
+                        </div>
+
+                        <div x-show="mode === 'package'">
+                            <label class="text-sm font-medium">Paket</label>
+                            <select name="package_id" :disabled="mode !== 'package'" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2">
+                                <template x-for="p in (packages[modal.console.category_id] || [])" :key="p.id">
+                                    <option :value="p.id" x-text="p.name + ' - Rp ' + Number(p.price).toLocaleString('id-ID')"></option>
+                                </template>
+                            </select>
+                        </div>
+
+                        <div class="flex justify-end gap-2 pt-2">
+                            <button type="button" @click="modal = null" class="rounded-lg px-4 py-2 text-sm">Batal</button>
+                            <button type="submit" class="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white">Mulai</button>
+                        </div>
+                    </form>
+                </template>
+
+                {{-- TAMBAH WAKTU --}}
+                <template x-if="modal && modal.type === 'extend'">
+                    <form method="POST" :action="'{{ url('/sessions') }}/' + modal.session_id + '/extend'" class="space-y-3">
+                        @csrf
+                        <h3 class="text-lg font-bold">Tambah Waktu: <span x-text="modal.console.name"></span></h3>
+
+                        <div>
+                            <label class="text-sm font-medium">Paket tambahan</label>
+                            <select name="package_id" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2">
+                                <option value="">- atau isi menit manual di bawah -</option>
+                                <template x-for="p in (packages[modal.console.category_id] || [])" :key="p.id">
+                                    <option :value="p.id" x-text="p.name + ' - Rp ' + Number(p.price).toLocaleString('id-ID')"></option>
+                                </template>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="text-sm font-medium">Menit manual (dihitung dari tarif per jam)</label>
+                            <input type="number" name="minutes" min="1" max="600" placeholder="Contoh: 15"
+                                   class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2">
+                        </div>
+
+                        <div class="flex justify-end gap-2 pt-2">
+                            <button type="button" @click="modal = null" class="rounded-lg px-4 py-2 text-sm">Batal</button>
+                            <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white">Tambah</button>
+                        </div>
+                    </form>
+                </template>
+
+                {{-- PINDAH MEJA --}}
+                <template x-if="modal && modal.type === 'move'">
+                    <form method="POST" :action="'{{ url('/sessions') }}/' + modal.session_id + '/move'" class="space-y-3">
+                        @csrf
+                        <h3 class="text-lg font-bold">Pindah dari <span x-text="modal.console.name"></span></h3>
+
+                        <div>
+                            <label class="text-sm font-medium">Meja tujuan (yang kosong)</label>
+                            <select name="console_id" required class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2">
+                                <template x-for="c in available.filter(c => c.id !== modal.console.id)" :key="c.id">
+                                    <option :value="c.id" x-text="c.name"></option>
+                                </template>
+                            </select>
+                            <p x-show="available.length === 0" class="mt-1 text-xs text-red-600">Tidak ada meja kosong.</p>
+                        </div>
+
+                        <label class="flex items-center gap-2 text-sm">
+                            <input type="checkbox" name="mark_old_maintenance" value="1">
+                            Tandai meja lama sebagai Maintenance (rusak)
+                        </label>
+
+                        <div class="flex justify-end gap-2 pt-2">
+                            <button type="button" @click="modal = null" class="rounded-lg px-4 py-2 text-sm">Batal</button>
+                            <button type="submit" class="rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white">Pindahkan</button>
+                        </div>
+                    </form>
+                </template>
+            </div>
+        </div>
     </div>
 @endsection

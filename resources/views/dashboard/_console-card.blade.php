@@ -1,11 +1,16 @@
 {{-- Kartu satu meja PS. Variabel masuk: $console --}}
 @php
     $session = $console->activeSession;
+    $stopped = $session && $session->actual_end_time;
 
     if ($console->status === \App\Models\Console::MAINTENANCE) {
         $label = 'Maintenance';
         $card  = 'border-slate-300 bg-slate-200 text-slate-500';
         $badge = 'bg-slate-500 text-white';
+    } elseif ($stopped) {
+        $label = 'Menunggu Bayar';
+        $card  = 'border-indigo-300 bg-indigo-50 text-indigo-900';
+        $badge = 'bg-indigo-600 text-white';
     } elseif ($session && $session->billing_mode === \App\Models\RentalSession::MODE_PACKAGE) {
         $label = 'Main Paket';
         $card  = 'border-blue-300 bg-blue-50 text-blue-900';
@@ -21,6 +26,9 @@
     }
 
     $rupiah = fn ($n) => 'Rp ' . number_format((float) $n, 0, ',', '.');
+
+    // Data meja yang dikirim ke jendela aksi (modal)
+    $consolePayload = ['id' => $console->id, 'name' => $console->name, 'category_id' => $console->category_id];
 @endphp
 
 <div
@@ -43,25 +51,59 @@
         <div class="my-2 text-center text-4xl font-bold tabular-nums">--:--:--</div>
         <div class="text-center text-xs opacity-70">
             Mulai {{ $session->start_time->format('H:i') }}
-            @if ($session->planned_end_time)
+            @if ($stopped)
+                , selesai {{ $session->actual_end_time->format('H:i') }} ({{ $session->total_minutes }} menit)
+            @elseif ($session->planned_end_time)
                 , selesai {{ $session->planned_end_time->format('H:i') }}
             @endif
         </div>
 
         <div class="mt-3 text-sm">
-            Sewa {{ $rupiah($session->rental_amount) }} + F&amp;B {{ $rupiah($session->fnb_amount) }}
+            @if ($stopped)
+                Total <span class="font-bold">{{ $rupiah($session->grand_total) }}</span>
+            @elseif ($session->billing_mode === \App\Models\RentalSession::MODE_OPEN)
+                Sewa dihitung saat Stop + F&amp;B {{ $rupiah($session->fnb_amount) }}
+            @else
+                Sewa {{ $rupiah($session->rental_amount) }} + F&amp;B {{ $rupiah($session->fnb_amount) }}
+            @endif
         </div>
 
-        <div class="mt-3 grid grid-cols-3 gap-2 text-xs">
-            <button type="button" disabled class="rounded-lg bg-white/70 py-2 font-semibold opacity-60">+ F&amp;B</button>
-            <button type="button" disabled class="rounded-lg bg-white/70 py-2 font-semibold opacity-60">+ Waktu</button>
-            <button type="button" disabled class="rounded-lg bg-red-600 py-2 font-semibold text-white opacity-60">Stop / Bayar</button>
-        </div>
+        @if ($stopped)
+            <div class="mt-3 text-xs">
+                <button type="button" disabled class="w-full rounded-lg bg-indigo-600 py-2 font-semibold text-white opacity-60">
+                    Bayar (bagian Niko)
+                </button>
+            </div>
+        @else
+            <div class="mt-3 grid grid-cols-2 gap-2 text-xs">
+                <button type="button" disabled class="rounded-lg bg-white/70 py-2 font-semibold opacity-60">+ F&amp;B</button>
+
+                @if ($session->billing_mode === \App\Models\RentalSession::MODE_PACKAGE)
+                    <button type="button"
+                            @click.stop="modal = { type: 'extend', session_id: {{ $session->id }}, console: @js($consolePayload) }"
+                            class="rounded-lg bg-white py-2 font-semibold hover:bg-blue-100">+ Waktu</button>
+                @else
+                    <button type="button" disabled class="rounded-lg bg-white/70 py-2 font-semibold opacity-60">+ Waktu</button>
+                @endif
+
+                <button type="button"
+                        @click.stop="modal = { type: 'move', session_id: {{ $session->id }}, console: @js($consolePayload) }"
+                        class="rounded-lg bg-white py-2 font-semibold hover:bg-amber-100">Pindah</button>
+
+                <form method="POST" action="{{ route('sessions.stop', $session) }}"
+                      @click.stop onsubmit="return confirm('Hentikan sesi {{ $console->name }}?')">
+                    @csrf
+                    <button type="submit" class="w-full rounded-lg bg-red-600 py-2 font-semibold text-white hover:bg-red-700">Stop</button>
+                </form>
+            </div>
+        @endif
     @elseif ($console->status === \App\Models\Console::MAINTENANCE)
         <div class="mt-8 text-center text-sm">Sedang tidak bisa dipakai</div>
     @else
         <div class="mt-5 text-center text-sm font-medium">{{ $rupiah($console->category->hourly_rate) }} / jam</div>
-        <button type="button" disabled class="mt-3 w-full rounded-lg bg-green-600 py-2 text-sm font-semibold text-white opacity-60">
+        <button type="button"
+                @click.stop="mode = 'package'; modal = { type: 'start', console: @js($consolePayload) }"
+                class="mt-3 w-full rounded-lg bg-green-600 py-2 text-sm font-semibold text-white hover:bg-green-700">
             Mulai Main
         </button>
     @endif

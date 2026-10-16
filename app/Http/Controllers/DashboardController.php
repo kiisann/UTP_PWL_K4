@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\CashierShift;
 use App\Models\Console;
+use App\Models\PricingPackage;
 
 class DashboardController extends Controller
 {
@@ -22,6 +23,26 @@ class DashboardController extends Controller
         
         $activeShift = CashierShift::open()->with('user')->latest('opened_at')->first();
 
-        return view('dashboard.index', compact('consoles', 'summary', 'activeShift'));
+       
+        $packages = PricingPackage::active()
+            ->orderBy('duration_minutes')
+            ->get()
+            ->groupBy('category_id')
+            ->map(fn ($group) => $group->map(fn ($p) => [
+                'id' => $p->id,
+                'name' => $p->name,
+                'duration_minutes' => $p->duration_minutes,
+                'price' => (float) $p->price,
+            ])->values())
+            ->toArray();
+
+    
+        $availableConsoles = $consoles
+            ->where('status', Console::AVAILABLE)
+            ->map(fn ($c) => ['id' => $c->id, 'name' => $c->name])
+            ->values()
+            ->toArray();
+
+        return view('dashboard.index', compact('consoles', 'summary', 'activeShift', 'packages', 'availableConsoles'));
     }
 }
