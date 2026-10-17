@@ -22,7 +22,7 @@
 </div>
 
 <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
-  <h3 class="font-bold text-slate-900 text-base mb-4">Daftar Kategori Konsol (console_categories)</h3>
+  <h3 class="font-bold text-slate-900 text-base mb-4">Daftar Kategori Konsol</h3>
   <table class="w-full text-left border-collapse text-sm">
     <thead>
       <tr class="border-b border-slate-200 text-xs uppercase text-slate-400">
@@ -52,7 +52,7 @@
 <!-- Form Tambah Meja / Unit PS -->
 <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
   <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-    <h3 class="font-bold text-slate-900 text-base">Daftar Unit / Bilik Meja PS (consoles)</h3>
+    <h3 class="font-bold text-slate-900 text-base">Daftar Unit / Bilik Meja PS</h3>
     <form action="{{ route('admin.consoles.units.store') }}" method="POST" class="flex flex-wrap items-center gap-2 text-xs">
       @csrf
       <input type="text" name="code" required placeholder="Kode (MEJA-09)" class="border border-slate-200 rounded-xl px-3 py-2 font-mono">
