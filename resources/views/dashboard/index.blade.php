@@ -3,10 +3,8 @@
 @section('title', 'Dashboard Kasir')
 
 @section('content')
-    {{-- Header atas: dikerjakan Sultan --}}
     @include('dashboard._header')
 
-    {{-- Pesan hasil aksi --}}
     @if (session('status'))
         <div class="bg-green-600 px-5 py-2 text-sm text-white">{{ session('status') }}</div>
     @endif
@@ -17,13 +15,34 @@
         <div class="bg-red-600 px-5 py-2 text-sm text-white">{{ $errors->first() }}</div>
     @endif
 
-    {{-- State bersama: selected = kartu yang diklik, modal = jendela aksi yang terbuka --}}
     <div
-        x-data="{ selected: null, modal: null, mode: 'package', packages: @js($packages), available: @js($availableConsoles) }"
+        x-data="dashboard(@js([
+            'packages' => $packages,
+            'available' => $availableConsoles,
+            'signature' => $signature,
+            'liveUrl' => route('api.consoles.live'),
+        ]))"
         class="flex min-h-0 flex-1"
     >
-        {{-- Panel kiri 70%: grid kartu meja --}}
         <main class="w-[70%] overflow-y-auto p-4">
+            <div class="mb-3 flex items-center justify-between gap-3 text-sm">
+                <span
+                    x-show="$store.alarm.on && $store.alarm.count > 0 && !$store.alarm.ready"
+                    x-cloak
+                    class="font-semibold text-red-600"
+                >
+                    Ada meja yang waktunya habis. Klik di mana saja untuk mengaktifkan suara alarm.
+                </span>
+                <span x-show="!($store.alarm.on && $store.alarm.count > 0 && !$store.alarm.ready)" class="text-slate-400">
+                    Warna kartu: biru = paket, kuning = sisa 10 menit, merah = habis, oranye = Open Bill
+                </span>
+
+                <button type="button" @click="$store.alarm.toggle()"
+                        class="rounded-lg border border-slate-300 bg-white px-3 py-1 font-medium hover:bg-slate-50">
+                    <span x-text="$store.alarm.on ? 'Suara alarm: ON' : 'Suara alarm: OFF'"></span>
+                </button>
+            </div>
+
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                 @forelse ($consoles as $console)
                     @include('dashboard._console-card', ['console' => $console])
@@ -35,10 +54,8 @@
             </div>
         </main>
 
-        {{-- Panel kanan 30%: detail tagihan & pembayaran, dikerjakan Niko --}}
         @include('dashboard._billing-panel')
 
-        {{-- Jendela aksi: Mulai Main / Tambah Waktu / Pindah Meja --}}
         <div
             x-show="modal" x-cloak
             @keydown.escape.window="modal = null"
@@ -46,7 +63,6 @@
         >
             <div @click.outside="modal = null" class="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl">
 
-                {{-- MULAI MAIN --}}
                 <template x-if="modal && modal.type === 'start'">
                     <form method="POST" action="{{ route('sessions.start') }}" class="space-y-3">
                         @csrf
@@ -83,7 +99,6 @@
                     </form>
                 </template>
 
-                {{-- TAMBAH WAKTU --}}
                 <template x-if="modal && modal.type === 'extend'">
                     <form method="POST" :action="'{{ url('/sessions') }}/' + modal.session_id + '/extend'" class="space-y-3">
                         @csrf
@@ -112,7 +127,6 @@
                     </form>
                 </template>
 
-                {{-- PINDAH MEJA --}}
                 <template x-if="modal && modal.type === 'move'">
                     <form method="POST" :action="'{{ url('/sessions') }}/' + modal.session_id + '/move'" class="space-y-3">
                         @csrf
