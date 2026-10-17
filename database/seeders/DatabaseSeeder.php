@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -13,21 +12,36 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        User::updateOrCreate(
+            ['username' => 'admin'],
+            [
+                'name' => 'Administrator (Owner)',
+                'password' => 'password',
+                'role' => 'admin',
+                'is_active' => true,
+            ]
+        );
 
-        User::create([
-            'name' => 'Test User',
-            'username' => 'testuser',
-            'password' => 'password',
-        ]);
+        User::updateOrCreate(
+            ['username' => 'testuser'],
+            [
+                'name' => 'Test User',
+                'password' => 'password',
+                'role' => 'cashier',
+                'is_active' => true,
+            ]
+        );
 
-        User::create([
-            'name' => 'Meidina',
-            'username' => 'meidina',
-            'password' => 'password',
-            'role' => 'cashier',
-        ]);
-                $this->call(MasterDataSeeder::class);
-                
+        User::updateOrCreate(
+            ['username' => 'meidina'],
+            [
+                'name' => 'Meidina',
+                'password' => 'password',
+                'role' => 'cashier',
+                'is_active' => true,
+            ]
+        );
+
+        $this->call(MasterDataSeeder::class);
     }
 }
