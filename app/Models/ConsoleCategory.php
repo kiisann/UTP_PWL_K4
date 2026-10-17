@@ -33,4 +33,9 @@ class ConsoleCategory extends Model
     {
         return $this->hasMany(PricingPackage::class, 'category_id');
     }
+
+    public function packages(): HasMany
+    {
+        return $this->hasMany(PricingPackage::class, 'category_id');
+    }
 }

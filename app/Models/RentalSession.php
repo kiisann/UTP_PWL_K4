@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class RentalSession extends Model
 {
@@ -72,6 +73,11 @@ class RentalSession extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    public function cashier(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
     public function package(): BelongsTo
     {
         return $this->belongsTo(PricingPackage::class, 'package_id');
@@ -85,5 +91,10 @@ class RentalSession extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class, 'rental_session_id');
+    }
+
+    public function payment(): HasOne
+    {
+        return $this->hasOne(Payment::class, 'rental_session_id')->latestOfMany('paid_at');
     }
 }
