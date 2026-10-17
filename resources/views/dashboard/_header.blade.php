@@ -20,6 +20,9 @@
     </div>
 
     <div class="flex items-center gap-3">
+        <a href="{{ route('admin.dashboard') }}" class="rounded-lg bg-blue-600 hover:bg-blue-700 px-3 py-2 text-sm font-semibold text-white transition">
+            Panel Admin
+        </a>
         {{-- Tombol di bawah masih placeholder (belum ada aksinya) --}}
         <button type="button" disabled class="rounded-lg bg-slate-700 px-3 py-2 text-sm opacity-60">
             Pesanan F&amp;B Langsung

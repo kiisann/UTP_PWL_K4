@@ -37,4 +37,9 @@ class Product extends Model
     {
         return $query->where('is_active', true);
     }
+
+    public function getMarginAttribute(): float
+    {
+        return (float) $this->sell_price - (float) $this->cost_price;
+    }
 }

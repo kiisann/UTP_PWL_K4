@@ -36,6 +36,11 @@ class CashierShift extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    public function cashier(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
     public function rentalSessions(): HasMany
     {
         return $this->hasMany(RentalSession::class, 'shift_id');
@@ -51,7 +56,6 @@ class CashierShift extends Model
         return $this->hasMany(Payment::class, 'shift_id');
     }
 
-    
     public function scopeOpen(Builder $query): Builder
     {
         return $query->whereNull('closed_at');
