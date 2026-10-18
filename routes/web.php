@@ -44,3 +44,7 @@ Route::post('/fnb-orders', [FnbOrderController::class, 'store'])
 // Memproses checkout sesi rental
 Route::post('/checkout/{sessionId}', [CheckoutController::class, 'store'])
     ->name('checkout.store');
+
+// Pembayaran pesanan F&B Walk-in
+Route::post('/fnb-orders/{orderId}/checkout', [CheckoutController::class, 'checkoutWalkIn'])
+    ->name('fnb-orders.checkout');
