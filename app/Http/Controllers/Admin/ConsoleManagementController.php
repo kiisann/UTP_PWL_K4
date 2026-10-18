@@ -54,6 +54,20 @@ class ConsoleManagementController extends Controller
             ->with('success', "Tarif kategori {$category->name} berhasil diperbarui.");
     }
 
+    public function destroyCategory(ConsoleCategory $category)
+    {
+        if ($category->consoles()->count() > 0) {
+            return redirect()->route('admin.consoles.index')
+                ->with('error', "Kategori {$category->name} tidak dapat dihapus karena masih memiliki unit aktif.");
+        }
+
+        $name = $category->name;
+        $category->delete();
+
+        return redirect()->route('admin.consoles.index')
+            ->with('success', "Kategori {$name} berhasil dihapus.");
+    }
+
     public function storeConsole(Request $request)
     {
         $validated = $request->validate([

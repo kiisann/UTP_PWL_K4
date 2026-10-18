@@ -16,7 +16,7 @@ Route::get('/', function () {
     return redirect()->route('dashboard');
 });
 
-// Route Kasir (Operasional POS)
+// Route Kasir
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 Route::get('/api/consoles/live-status', [DashboardController::class, 'liveStatus'])->name('api.consoles.live');
 
@@ -43,6 +43,7 @@ Route::prefix('admin')
         Route::get('/consoles', [ConsoleManagementController::class, 'index'])->name('consoles.index');
         Route::post('/consoles/categories', [ConsoleManagementController::class, 'storeCategory'])->name('consoles.categories.store');
         Route::put('/consoles/categories/{category}', [ConsoleManagementController::class, 'updateCategory'])->name('consoles.categories.update');
+        Route::delete('/consoles/categories/{category}', [ConsoleManagementController::class, 'destroyCategory'])->name('consoles.categories.destroy');
         Route::post('/consoles/units', [ConsoleManagementController::class, 'storeConsole'])->name('consoles.units.store');
         Route::patch('/consoles/units/{console}/toggle-maintenance', [ConsoleManagementController::class, 'toggleMaintenance'])->name('consoles.units.toggle');
 
