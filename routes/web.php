@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\ShiftAndUserController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\RentalSessionController;
+use App\Http\Controllers\ShiftController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -16,10 +17,16 @@ Route::get('/', function () {
 
 // Route Kasir (Operasional POS)
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::get('/api/consoles/live-status', [DashboardController::class, 'liveStatus'])->name('api.consoles.live');
+
 Route::post('/sessions/start', [RentalSessionController::class, 'start'])->name('sessions.start');
 Route::post('/sessions/{rentalSession}/extend', [RentalSessionController::class, 'extend'])->name('sessions.extend');
 Route::post('/sessions/{rentalSession}/move', [RentalSessionController::class, 'move'])->name('sessions.move');
 Route::post('/sessions/{rentalSession}/stop', [RentalSessionController::class, 'stop'])->name('sessions.stop');
+
+Route::post('/shifts/open', [ShiftController::class, 'open'])->name('shifts.open');
+Route::post('/shifts/close', [ShiftController::class, 'close'])->name('shifts.close');
+Route::get('/shifts/summary', [ShiftController::class, 'summary'])->name('shifts.summary');
 
 // Route Bagian Admin
 Route::prefix('admin')
@@ -55,5 +62,4 @@ Route::prefix('admin')
         // 6. Laporan Keuangan & Audit Void
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/export-csv', [ReportController::class, 'exportCsv'])->name('reports.export');
-        Route::get('/api/consoles/live-status', [DashboardController::class, 'liveStatus'])->name('api.consoles.live');
     });
