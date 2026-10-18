@@ -55,4 +55,5 @@ Route::prefix('admin')
         // 6. Laporan Keuangan & Audit Void
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/export-csv', [ReportController::class, 'exportCsv'])->name('reports.export');
+        Route::get('/api/consoles/live-status', [DashboardController::class, 'liveStatus'])->name('api.consoles.live');
     });
