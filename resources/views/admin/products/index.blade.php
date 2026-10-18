@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Inventori & Menu F&B — PlayZone POS')
+@section('title', 'Inventori & Menu F&B')
 @section('header_title', 'Manajemen Inventori & Menu Makanan/Minuman (F&B)')
 @section('header_subtitle', 'Kelola harga modal (HPP), harga jual, dan stok produk F&B di kasir')
 
@@ -28,7 +28,6 @@
     <div>
       <h3 class="font-bold text-slate-900 text-base">
         Katalog Produk &amp; Stok F&amp;B
-        <span class="ml-1 text-xs font-mono text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-md">products</span>
       </h3>
       <p class="text-xs text-slate-400 mt-0.5">Stok berkurang otomatis saat dipesan ke bilik PS maupun pembelian langsung di kasir</p>
     </div>

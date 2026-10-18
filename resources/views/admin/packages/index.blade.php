@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Paket Harga Main — PlayZone POS')
+@section('title', 'Paket Harga Main')
 @section('header_title', 'Manajemen Paket Harga Main (Fixed Package)')
 @section('header_subtitle', 'Atur daftar paket durasi tetap untuk masing-masing kategori konsol PlayStation')
 
@@ -26,7 +26,6 @@
     <div>
       <h3 class="font-bold text-slate-900 text-base">
         Daftar Paket Waktu Bermain
-        <span class="ml-1 text-xs font-mono text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-md">pricing_packages</span>
       </h3>
       <p class="text-xs text-slate-400 mt-0.5">Paket durasi tetap (Countdown) untuk memberikan harga lebih hemat dibanding tarif per jam reguler</p>
     </div>

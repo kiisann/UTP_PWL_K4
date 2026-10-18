@@ -72,7 +72,6 @@
     <div class="px-5 py-4 border-b border-slate-100">
       <h3 class="font-bold text-slate-900 text-base">
         Riwayat Rekonsiliasi Laci Kasir
-        <span class="ml-1 text-xs font-mono text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-md">cashier_shifts</span>
       </h3>
       <p class="text-xs text-slate-400 mt-0.5">Membandingkan uang tunai seharusnya di sistem <span class="font-mono">(expected_cash)</span> dengan uang fisik aktual saat tutup shift</p>
     </div>

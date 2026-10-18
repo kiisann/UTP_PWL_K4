@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Master Konsol & Tarif — PlayZone POS')
+@section('title', 'Master Konsol & Tarif')
 @section('header_title', 'Master Kategori Konsol & Daftar Meja PS')
 @section('header_subtitle', 'Kelola tarif dasar per jam, aturan pembulatan Open Bill, dan status operasional tiap bilik')
 
@@ -26,7 +26,6 @@
     <div>
       <h3 class="font-bold text-slate-900 text-base">
         Kategori Konsol &amp; Parameter Tarif
-        <span class="ml-1 text-xs font-mono text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-md">console_categories</span>
       </h3>
       <p class="text-xs text-slate-400 mt-0.5">Atur tarif dasar per jam, batas durasi minimum Open Bill, dan blok pembulatan menit</p>
     </div>

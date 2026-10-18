@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Laporan & Audit Void — PlayZone POS')
+@section('title', 'Laporan & Audit Void')
 @section('header_title', 'Laporan Pendapatan & Audit Pembatalan (Void Log)')
 @section('header_subtitle', 'Rekapitulasi transaksi selesai dan pengawasan pembatalan sesi bermain')
 

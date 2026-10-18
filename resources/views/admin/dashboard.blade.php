@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Dashboard Admin — PlayZone POS')
+@section('title', 'Dashboard Admin')
 @section('header_title', 'Ringkasan Eksekutif & Monitoring Bilik')
 @section('header_subtitle', 'Pantau performa harian, okupansi konsol main di tempat, dan pendapatan F&B secara real-time')
 
