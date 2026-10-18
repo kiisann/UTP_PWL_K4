@@ -22,6 +22,7 @@
         <th class="py-3 px-4">Sewa PS</th>
         <th class="py-3 px-4">F&amp;B</th>
         <th class="py-3 px-4">Grand Total</th>
+        <th class="py-3 px-4">Struk</th>
       </tr>
     </thead>
     <tbody class="divide-y divide-slate-100">
@@ -34,10 +35,13 @@
         <td class="py-3 px-4">Rp {{ number_format($s->rental_amount, 0, ',', '.') }}</td>
         <td class="py-3 px-4">Rp {{ number_format($s->fnb_amount, 0, ',', '.') }}</td>
         <td class="py-3 px-4 font-bold">Rp {{ number_format($s->grand_total, 0, ',', '.') }}</td>
+        <td class="py-3 px-4">
+          <a href="{{ route('sessions.receipt', [$s, 'print' => 1]) }}" target="_blank" class="text-xs font-semibold text-blue-600 hover:underline">Cetak ulang</a>
+        </td>
       </tr>
       @empty
       <tr>
-        <td colspan="7" class="py-6 text-center text-slate-400 text-xs">Belum ada transaksi selesai yang dibayar.</td>
+        <td colspan="8" class="py-6 text-center text-slate-400 text-xs">Belum ada transaksi selesai yang dibayar.</td>
       </tr>
       @endforelse
     </tbody>

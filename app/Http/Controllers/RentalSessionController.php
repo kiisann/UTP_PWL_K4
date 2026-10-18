@@ -65,6 +65,18 @@ class RentalSessionController extends Controller
         return $this->run($request, 'Sesi dihentikan, menunggu pembayaran.', fn () => $this->sessions->stop($rentalSession));
     }
 
+    public function void(Request $request, RentalSession $rentalSession)
+    {
+        $data = $request->validate([
+            'reason' => ['required', 'string', 'min:3', 'max:200'],
+        ]);
+
+        return $this->run($request, 'Sesi dibatalkan (void).', fn () => $this->sessions->void(
+            $rentalSession,
+            $data['reason']
+        ));
+    }
+
     
     private function run(Request $request, string $successMessage, callable $action)
     {
