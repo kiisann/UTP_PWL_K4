@@ -78,7 +78,6 @@ setInterval(() => {
 }, 4000);
 
 
- 
 Alpine.data('sessionTimer', (cfg) => ({
     offset: cfg.serverNow - Date.now(), // selisih jam server dan jam browser
     now: cfg.serverNow,
@@ -188,6 +187,58 @@ Alpine.data('dashboard', (cfg) => ({
         } catch (e) {
             // koneksi putus sebentar: coba lagi 10 detik berikutnya
         }
+    },
+}));
+
+
+Alpine.data('shiftBar', (cfg) => ({
+    modal: cfg.autoOpen ? 'open' : null, // otomatis terbuka kalau belum ada shift
+    loading: false,
+    error: null,
+    summary: null,
+    actual: '',
+    startingCash: '',
+
+    async openClose() {
+        this.modal = 'close';
+        this.actual = '';
+        this.error = null;
+        this.summary = null;
+        this.loading = true;
+
+        try {
+            const res = await fetch(cfg.summaryUrl, {
+                headers: { Accept: 'application/json' },
+                credentials: 'same-origin',
+            });
+            if (!res.ok) throw new Error('gagal');
+            this.summary = await res.json();
+        } catch (e) {
+            this.error = 'Gagal memuat ringkasan shift. Tutup jendela ini lalu coba lagi.';
+        } finally {
+            this.loading = false;
+        }
+    },
+
+   
+    get difference() {
+        if (!this.summary || this.actual === '') return null;
+        return Number(this.actual) - Number(this.summary.expected_cash);
+    },
+
+    get balanced() {
+        return this.difference !== null && Math.abs(this.difference) < 0.005;
+    },
+
+    get differenceText() {
+        const d = this.difference;
+        if (d === null) return '';
+        if (Math.abs(d) < 0.005) return 'Pas, tidak ada selisih';
+        return (d < 0 ? 'KURANG ' : 'LEBIH ') + this.rupiah(Math.abs(d));
+    },
+
+    rupiah(n) {
+        return 'Rp ' + Number(n || 0).toLocaleString('id-ID');
     },
 }));
 

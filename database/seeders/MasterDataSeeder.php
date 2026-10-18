@@ -2,23 +2,18 @@
 
 namespace Database\Seeders;
 
-use App\Models\CashierShift;
 use App\Models\Console;
 use App\Models\ConsoleCategory;
 use App\Models\PricingPackage;
 use App\Models\Product;
-use App\Models\User;
 use Illuminate\Database\Seeder;
 
-/**
- * Data master awal untuk pengembangan (harga hanya contoh,
- * nanti bisa diubah Admin lewat panel admin).
- */
+
 class MasterDataSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Kategori konsol: nama => [tarif per jam, deskripsi]
+       
         $categoryData = [
             'PS3'      => [6000,  'Konsol PS3 reguler'],
             'PS4 Slim' => [10000, 'Konsol PS4 Slim reguler'],
@@ -40,7 +35,7 @@ class MasterDataSeeder extends Seeder
             );
         }
 
-        // 2. Meja / bilik: [kode, nama, kategori, status]
+        
         $consoles = [
             ['MEJA-01', 'MEJA 01 - PS3',      'PS3',      Console::AVAILABLE],
             ['MEJA-02', 'MEJA 02 - PS4 Slim', 'PS4 Slim', Console::AVAILABLE],
@@ -49,7 +44,7 @@ class MasterDataSeeder extends Seeder
             ['MEJA-05', 'MEJA 05 - PS5',      'PS5',      Console::AVAILABLE],
             ['MEJA-06', 'MEJA 06 - PS5',      'PS5',      Console::AVAILABLE],
             ['MEJA-07', 'MEJA 07 - VIP Room', 'VIP Room', Console::AVAILABLE],
-            // sengaja maintenance, supaya warna abu-abu bisa dites
+           
             ['MEJA-08', 'MEJA 08 - PS4 Slim', 'PS4 Slim', Console::MAINTENANCE],
         ];
 
@@ -64,7 +59,7 @@ class MasterDataSeeder extends Seeder
             );
         }
 
-        // 3. Paket hemat: kategori => [[nama, durasi menit, harga], ...]
+       
         $packages = [
             'PS3' => [
                 ['Paket 1 Jam', 60, 5000],
@@ -105,7 +100,7 @@ class MasterDataSeeder extends Seeder
             }
         }
 
-        // 4. Produk F&B: [sku, nama, kategori, harga modal, harga jual, stok]
+        
         $products = [
             ['IDM-GRG', 'Indomie Goreng',   'makanan', 3000, 6000, 50],
             ['IDM-KUA', 'Indomie Kuah',     'makanan', 3000, 6000, 50],
@@ -129,20 +124,6 @@ class MasterDataSeeder extends Seeder
                     'is_active' => true,
                 ]
             );
-        }
-
-        // 5. Shift DUMMY supaya sesi bermain punya shift_id saat dikembangkan.
-        //    Hapus bagian ini kalau fitur shift (Sultan) sudah jadi.
-        $cashier = User::where('username', 'meidina')->first();
-
-        if ($cashier && ! CashierShift::open()->exists()) {
-            CashierShift::create([
-                'user_id' => $cashier->id,
-                'opened_at' => now(),
-                'starting_cash' => 100000,
-                'expected_cash' => 100000,
-                'qris_total' => 0,
-            ]);
         }
     }
 }
