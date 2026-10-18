@@ -5,10 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\CashierShift;
 use App\Models\Console;
 use App\Models\PricingPackage;
+use App\Services\BillingCalculatorService;
 use Illuminate\Support\Collection;
 
 class DashboardController extends Controller
 {
+    public function __construct(private BillingCalculatorService $billing)
+    {
+    }
+
     public function index()
     {
         $consoles = $this->loadConsoles();
@@ -61,6 +66,7 @@ class DashboardController extends Controller
             'signature' => $this->signature($consoles),
             'consoles' => $consoles->map(function ($console) use ($now) {
                 $s = $console->activeSession;
+                $snap = $s ? $this->billing->snapshot($s, $now) : null;
 
                 return [
                     'id' => $console->id,
@@ -86,6 +92,9 @@ class DashboardController extends Controller
                         'rental_amount' => (float) $s->rental_amount,
                         'fnb_amount' => (float) $s->fnb_amount,
                         'grand_total' => (float) $s->grand_total,
+                        // tagihan berjalan: Open Bill dihitung sampai sekarang dengan rumus 4 langkah
+                        'estimated_rental_amount' => $snap['rental_amount'],
+                        'estimated_grand_total' => $snap['grand_total'],
                     ] : null,
                 ];
             })->values(),

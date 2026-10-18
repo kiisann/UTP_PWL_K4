@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\ProductInventoryController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\ShiftAndUserController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ReceiptController;
 use App\Http\Controllers\RentalSessionController;
 use App\Http\Controllers\ShiftController;
 use Illuminate\Support\Facades\Route;
@@ -23,6 +24,8 @@ Route::post('/sessions/start', [RentalSessionController::class, 'start'])->name(
 Route::post('/sessions/{rentalSession}/extend', [RentalSessionController::class, 'extend'])->name('sessions.extend');
 Route::post('/sessions/{rentalSession}/move', [RentalSessionController::class, 'move'])->name('sessions.move');
 Route::post('/sessions/{rentalSession}/stop', [RentalSessionController::class, 'stop'])->name('sessions.stop');
+Route::post('/sessions/{rentalSession}/void', [RentalSessionController::class, 'void'])->name('sessions.void');
+Route::get('/sessions/{rentalSession}/receipt', [ReceiptController::class, 'show'])->name('sessions.receipt');
 
 Route::post('/shifts/open', [ShiftController::class, 'open'])->name('shifts.open');
 Route::post('/shifts/close', [ShiftController::class, 'close'])->name('shifts.close');

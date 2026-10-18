@@ -24,6 +24,12 @@
         'plannedEnd' => $session->planned_end_time ? $session->planned_end_time->getTimestamp() * 1000 : null,
         'actualEnd' => $session->actual_end_time ? $session->actual_end_time->getTimestamp() * 1000 : null,
         'serverNow' => $serverNow,
+        'rate' => (float) $console->category->hourly_rate,
+        'minCharge' => (int) $console->category->min_charge_minutes,
+        'rounding' => (int) $console->category->rounding_minutes,
+        'rental' => (float) $session->rental_amount,
+        'fnb' => (float) $session->fnb_amount,
+        'discount' => (float) $session->discount_amount,
     ] : null;
 @endphp
 
@@ -87,7 +93,9 @@
             @if ($stopped)
                 Total <span class="font-bold">{{ $rupiah($session->grand_total) }}</span>
             @elseif ($session->billing_mode === \App\Models\RentalSession::MODE_OPEN)
-                Sewa dihitung saat Stop + F&amp;B {{ $rupiah($session->fnb_amount) }}
+                Sewa <span class="font-bold" x-text="rupiah(estimatedRental)"></span>
+                + F&amp;B {{ $rupiah($session->fnb_amount) }}
+                <div class="text-xs opacity-70">Total sementara <span class="font-semibold" x-text="rupiah(estimatedTotal)"></span> (final saat Stop)</div>
             @else
                 Sewa {{ $rupiah($session->rental_amount) }} + F&amp;B {{ $rupiah($session->fnb_amount) }}
             @endif
@@ -98,7 +106,12 @@
                 <button type="button" disabled class="w-full rounded-lg bg-indigo-600 py-2 font-semibold text-white opacity-60">
                     Bayar (bagian Niko)
                 </button>
+                <a href="{{ route('sessions.receipt', $session) }}" target="_blank" @click.stop
+                   class="mt-2 block text-center underline opacity-70 hover:opacity-100">Pratinjau struk</a>
             </div>
+        <button type="button"
+                @click.stop="modal = { type: 'void', session_id: {{ $session->id }}, console: @js($consolePayload) }"
+                class="mt-2 w-full text-center text-xs underline opacity-70 hover:opacity-100">Batalkan sesi (void)</button>
         @else
             <div class="mt-3 grid grid-cols-2 gap-2 text-xs">
                 <button type="button" disabled class="rounded-lg bg-white/70 py-2 font-semibold opacity-60">+ F&amp;B</button>
@@ -121,6 +134,9 @@
                     <button type="submit" class="w-full rounded-lg bg-red-600 py-2 font-semibold text-white hover:bg-red-700">Stop</button>
                 </form>
             </div>
+        <button type="button"
+                @click.stop="modal = { type: 'void', session_id: {{ $session->id }}, console: @js($consolePayload) }"
+                class="mt-2 w-full text-center text-xs underline opacity-70 hover:opacity-100">Batalkan sesi (void)</button>
         @endif
     @elseif ($console->status === \App\Models\Console::MAINTENANCE)
         <div class="mt-8 text-center text-sm">Sedang tidak bisa dipakai</div>

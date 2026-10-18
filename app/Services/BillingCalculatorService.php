@@ -42,6 +42,36 @@ class BillingCalculatorService
     }
 
     /**
+     * Tagihan sementara sebuah sesi (dipakai kartu meja, live status, dan pratinjau struk).
+     *
+     * - Open Bill yang masih berjalan dihitung sampai $at (default: sekarang) memakai rumus 4 langkah.
+     * - Selain itu (Paket, atau Open Bill yang sudah di-Stop) memakai nilai yang tersimpan.
+     * grand_total selalu dihitung ulang dari sewa + F&B - diskon, jadi ikut berubah saat F&B bertambah.
+     *
+     * @return array{rental_amount:float, total_minutes:int, grand_total:float, is_live:bool}
+     */
+    public function snapshot(RentalSession $session, ?CarbonInterface $at = null): array
+    {
+        $isLive = $session->billing_mode === RentalSession::MODE_OPEN && $session->actual_end_time === null;
+
+        if ($isLive) {
+            $r = $this->forSession($session, $at);
+            $rental = $r['rental_amount'];
+            $minutes = $r['total_minutes'];
+        } else {
+            $rental = (float) $session->rental_amount;
+            $minutes = (int) $session->total_minutes;
+        }
+
+        return [
+            'rental_amount' => $rental,
+            'total_minutes' => $minutes,
+            'grand_total' => $this->grandTotal($rental, (float) $session->fnb_amount, (float) $session->discount_amount),
+            'is_live' => $isLive,
+        ];
+    }
+
+    /**
      * @return array{actual_minutes:int, effective_minutes:int, billed_minutes:int, rental_amount:float, total_minutes:int, grand_total:float}
      */
     public function forSession(RentalSession $session, ?CarbonInterface $end = null): array

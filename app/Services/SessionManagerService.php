@@ -4,7 +4,9 @@ namespace App\Services;
 
 use App\Models\CashierShift;
 use App\Models\Console;
+use App\Models\FnbOrder;
 use App\Models\PricingPackage;
+use App\Models\Product;
 use App\Models\RentalSession;
 use App\Models\User;
 use Carbon\CarbonInterface;
@@ -12,7 +14,7 @@ use DomainException;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Siklus sesi bermain: start, extend, move, stop (Bab 4.3 dokumen).
+ * Siklus sesi bermain: start, extend, move, stop, void (Bab 2 dan 4.3 dokumen).
  *
  * Semua operasi berjalan di dalam DB::transaction dan mengunci baris yang
  * disentuh (lockForUpdate), supaya dua klik bersamaan tidak merusak data.
@@ -216,6 +218,57 @@ class SessionManagerService
                 );
             }
 
+            $s->save();
+
+            return $s->load('console.category');
+        });
+    }
+
+    /**
+     * Batalkan (void) sesi yang BELUM dibayar: meja dibebaskan, stok F&B yang sudah
+     * dipotong dikembalikan, dan alasan dicatat di notes untuk void log admin.
+     * Sesi yang sudah lunas tidak bisa di-void di sini (butuh pembalikan pembayaran).
+     */
+    public function void(RentalSession $session, string $reason): RentalSession
+    {
+        $reason = trim($reason);
+        if ($reason === '') {
+            throw new DomainException('Alasan pembatalan wajib diisi.');
+        }
+
+        return DB::transaction(function () use ($session, $reason) {
+            $s = RentalSession::whereKey($session->id)->lockForUpdate()->firstOrFail();
+
+            if ($s->session_status !== RentalSession::RUNNING || $s->payment_status !== RentalSession::UNPAID) {
+                throw new DomainException('Hanya sesi yang belum dibayar yang bisa dibatalkan.');
+            }
+
+            // Bebaskan meja, tapi jangan menimpa status maintenance.
+            $console = Console::whereKey($s->console_id)->lockForUpdate()->first();
+            if ($console && $console->status === Console::OCCUPIED) {
+                $console->update(['status' => Console::AVAILABLE]);
+            }
+
+            // Kembalikan stok dari pesanan F&B meja ini.
+            $orders = FnbOrder::where('rental_session_id', $s->id)
+                ->where('order_status', '!=', 'void')
+                ->with('items')
+                ->lockForUpdate()
+                ->get();
+
+            foreach ($orders as $order) {
+                foreach ($order->items as $item) {
+                    Product::whereKey($item->product_id)->increment('stock', $item->qty);
+                }
+                $order->update(['order_status' => 'void']);
+            }
+
+            if ($s->actual_end_time === null) {
+                $s->actual_end_time = now();
+            }
+            $s->session_status = RentalSession::CANCELLED;
+            $s->payment_status = RentalSession::VOID;
+            $s->notes = $this->appendNote($s->notes, "VOID: {$reason}");
             $s->save();
 
             return $s->load('console.category');

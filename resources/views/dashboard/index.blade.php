@@ -127,6 +127,29 @@
                     </form>
                 </template>
 
+                <template x-if="modal && modal.type === 'void'">
+                    <form method="POST" :action="'{{ url('/sessions') }}/' + modal.session_id + '/void'" class="space-y-3">
+                        @csrf
+                        <h3 class="text-lg font-bold text-red-700">Batalkan sesi: <span x-text="modal.console.name"></span></h3>
+                        <p class="rounded-lg bg-red-50 p-2 text-xs text-red-800">
+                            Meja akan dikosongkan, stok F&amp;B pada sesi ini dikembalikan, dan pembatalan tercatat di void log admin.
+                            Sesi yang sudah dibayar tidak bisa dibatalkan dari sini.
+                        </p>
+
+                        <div>
+                            <label class="text-sm font-medium">Alasan pembatalan <span class="text-red-600">*</span></label>
+                            <input type="text" name="reason" required minlength="3" maxlength="200"
+                                   placeholder="Contoh: pelanggan batal main / salah input meja"
+                                   class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2">
+                        </div>
+
+                        <div class="flex justify-end gap-2 pt-2">
+                            <button type="button" @click="modal = null" class="rounded-lg px-4 py-2 text-sm">Kembali</button>
+                            <button type="submit" class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white">Batalkan Sesi</button>
+                        </div>
+                    </form>
+                </template>
+
                 <template x-if="modal && modal.type === 'move'">
                     <form method="POST" :action="'{{ url('/sessions') }}/' + modal.session_id + '/move'" class="space-y-3">
                         @csrf

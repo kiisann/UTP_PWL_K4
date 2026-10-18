@@ -15,5 +15,8 @@
     },
     "dependencies": {
         "alpinejs": "^3.17.4"
+    },
+    "optionalDependencies": {
+        "@tailwindcss/oxide-win32-x64-msvc": "^4.3.3"
     }
 }

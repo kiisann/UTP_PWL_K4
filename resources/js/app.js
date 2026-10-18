@@ -128,6 +128,29 @@ Alpine.data('sessionTimer', (cfg) => ({
         return this.format(Math.max(0, Math.floor(seconds)));
     },
 
+    // Sewa sementara. Open Bill memakai rumus yang sama dengan BillingCalculatorService
+    // (durasi dibulatkan ke atas, minimum tagih, lalu blok pembulatan); Paket memakai harga tetap.
+    get estimatedRental() {
+        if (cfg.mode !== 'open') return cfg.rental;
+
+        const end = cfg.actualEnd ?? this.now;
+        const seconds = Math.max(0, (end - cfg.start) / 1000);
+        const actual = Math.ceil(seconds / 60);
+        const effective = Math.max(actual, cfg.minCharge);
+        const rounding = Math.max(1, cfg.rounding);
+        const billed = Math.ceil(effective / rounding) * rounding;
+
+        return Math.round((billed / 60) * cfg.rate * 100) / 100;
+    },
+
+    get estimatedTotal() {
+        return Math.max(0, this.estimatedRental + cfg.fnb - cfg.discount);
+    },
+
+    rupiah(n) {
+        return 'Rp ' + Number(n || 0).toLocaleString('id-ID');
+    },
+
     get caption() {
         return {
             stopped: 'Durasi main',
