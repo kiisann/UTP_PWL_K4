@@ -6,7 +6,12 @@
     @include('dashboard._header')
 
     @if (session('status'))
-        <div class="bg-green-600 px-5 py-2 text-sm text-white">{{ session('status') }}</div>
+        <div class="bg-green-600 px-5 py-2 text-sm text-white flex items-center justify-between">
+            <span>{{ session('status') }}</span>
+            @if (session('print_receipt_url'))
+                <a href="{{ session('print_receipt_url') }}" target="_blank" class="rounded-lg bg-white px-2.5 py-1 text-xs font-bold text-green-800 hover:bg-green-50 shadow-xs">🖨️ Cetak Struk</a>
+            @endif
+        </div>
     @endif
     @if (session('error'))
         <div class="bg-red-600 px-5 py-2 text-sm text-white">{{ session('error') }}</div>
@@ -19,6 +24,7 @@
         x-data="dashboard(@js([
             'packages' => $packages,
             'available' => $availableConsoles,
+            'products' => $products ?? [],
             'signature' => $signature,
             'liveUrl' => route('api.consoles.live'),
         ]))"
@@ -173,6 +179,137 @@
                         <div class="flex justify-end gap-2 pt-2">
                             <button type="button" @click="modal = null" class="rounded-lg px-4 py-2 text-sm">Batal</button>
                             <button type="submit" class="rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white">Pindahkan</button>
+                        </div>
+                    </form>
+                </template>
+
+                <!-- MODAL CHECKOUT / PEMBAYARAN SESI -->
+                <template x-if="modal && modal.type === 'checkout'">
+                    <form method="POST" :action="'{{ url('/sessions') }}/' + modal.session_id + '/checkout'" class="space-y-4">
+                        @csrf
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                            <h3 class="text-lg font-bold text-slate-900">Pembayaran: <span x-text="modal.console.name"></span></h3>
+                            <span class="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-800">Checkout</span>
+                        </div>
+
+                        <div class="rounded-xl bg-slate-50 border border-slate-200 p-3 space-y-1.5 text-xs">
+                            <div class="flex justify-between">
+                                <span class="text-slate-600">Biaya Sewa PS</span>
+                                <span class="font-semibold text-slate-900" x-text="formatRupiah(modal.rental || 0)"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-600">Pesanan F&amp;B</span>
+                                <span class="font-semibold text-slate-900" x-text="formatRupiah(modal.fnb || 0)"></span>
+                            </div>
+                            <div class="flex justify-between border-t border-slate-200 pt-1.5 text-sm font-bold text-slate-900">
+                                <span>Total Tagihan</span>
+                                <span class="text-base text-emerald-700 font-extrabold" x-text="formatRupiah(modal.grand_total)"></span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-xs font-semibold text-slate-700">Metode Pembayaran</label>
+                            <div class="grid grid-cols-2 gap-2 mt-1 text-xs">
+                                <button type="button"
+                                        @click="checkoutMethod = 'cash'; checkoutPaid = Math.max(checkoutPaid || 0, modal.grand_total)"
+                                        :class="checkoutMethod === 'cash' ? 'bg-emerald-600 text-white font-bold' : 'bg-slate-100 text-slate-700'"
+                                        class="rounded-lg py-2 transition">
+                                    💵 Tunai (Cash)
+                                </button>
+                                <button type="button"
+                                        @click="checkoutMethod = 'qris'; checkoutPaid = modal.grand_total"
+                                        :class="checkoutMethod === 'qris' ? 'bg-emerald-600 text-white font-bold' : 'bg-slate-100 text-slate-700'"
+                                        class="rounded-lg py-2 transition">
+                                    📱 QRIS
+                                </button>
+                            </div>
+                            <input type="hidden" name="payment_method" :value="checkoutMethod">
+                        </div>
+
+                        <div>
+                            <label class="text-xs font-semibold text-slate-700">Nominal Uang Diterima (Rp)</label>
+                            <input type="number"
+                                   name="paid_amount"
+                                   x-model.number="checkoutPaid"
+                                   :readonly="checkoutMethod === 'qris'"
+                                   min="0"
+                                   step="1000"
+                                   class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-bold text-slate-900 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
+                        </div>
+
+                        <div x-show="checkoutMethod === 'cash'" class="space-y-1.5 text-xs">
+                            <div class="grid grid-cols-3 gap-1.5">
+                                <button type="button" @click="checkoutPaid = modal.grand_total" class="rounded-lg border border-slate-200 bg-white py-1.5 font-semibold text-slate-700 hover:bg-slate-50">Uang Pas</button>
+                                <button type="button" @click="checkoutPaid = 20000" class="rounded-lg border border-slate-200 bg-white py-1.5 font-semibold text-slate-700 hover:bg-slate-50">20.000</button>
+                                <button type="button" @click="checkoutPaid = 50000" class="rounded-lg border border-slate-200 bg-white py-1.5 font-semibold text-slate-700 hover:bg-slate-50">50.000</button>
+                                <button type="button" @click="checkoutPaid = 100000" class="rounded-lg border border-slate-200 bg-white py-1.5 font-semibold text-slate-700 hover:bg-slate-50">100.000</button>
+                                <button type="button" @click="checkoutPaid = Math.ceil(modal.grand_total / 10000) * 10000" class="rounded-lg border border-slate-200 bg-white py-1.5 font-semibold text-slate-700 hover:bg-slate-50">+10 Ribu</button>
+                                <button type="button" @click="checkoutPaid = Math.ceil(modal.grand_total / 50000) * 50000" class="rounded-lg border border-slate-200 bg-white py-1.5 font-semibold text-slate-700 hover:bg-slate-50">+50 Ribu</button>
+                            </div>
+
+                            <div class="flex justify-between items-center rounded-lg bg-emerald-100/70 px-3 py-2 mt-2 font-bold text-emerald-950">
+                                <span>Kembalian:</span>
+                                <span class="text-sm" x-text="formatRupiah(Math.max(0, (checkoutPaid || 0) - modal.grand_total))"></span>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end gap-2 pt-2">
+                            <button type="button" @click="modal = null" class="rounded-lg px-4 py-2 text-sm text-slate-600 hover:bg-slate-100">Batal</button>
+                            <button type="submit"
+                                    :disabled="checkoutMethod === 'cash' && (checkoutPaid || 0) < modal.grand_total"
+                                    class="rounded-lg bg-emerald-600 px-5 py-2 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-50 transition">
+                                Bayar &amp; Selesaikan Sesi
+                            </button>
+                        </div>
+                    </form>
+                </template>
+
+                <!-- MODAL TAMBAH F&B KE SESI -->
+                <template x-if="modal && modal.type === 'fnb'">
+                    <form method="POST" :action="'{{ url('/sessions') }}/' + modal.session_id + '/fnb'" class="space-y-4">
+                        @csrf
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                            <h3 class="text-lg font-bold text-slate-900">Tambah F&amp;B: <span x-text="modal.console.name"></span></h3>
+                            <span class="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-bold text-blue-800">Pesanan</span>
+                        </div>
+
+                        <div class="max-h-60 overflow-y-auto space-y-2 pr-1">
+                            <template x-for="p in products" :key="p.id">
+                                <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-2.5 text-xs shadow-2xs">
+                                    <div>
+                                        <div class="font-bold text-slate-900" x-text="p.name"></div>
+                                        <div class="text-slate-500 text-[11px]" x-text="formatRupiah(p.sell_price) + ' • Stok: ' + p.stock"></div>
+                                    </div>
+                                    <div class="flex items-center gap-1.5">
+                                        <button type="button" @click="fnbModalQty[p.id] = Math.max(0, (fnbModalQty[p.id] || 0) - 1)" class="w-6 h-6 rounded bg-slate-100 font-bold hover:bg-slate-200">-</button>
+                                        <span class="w-6 text-center font-bold text-slate-900" x-text="fnbModalQty[p.id] || 0"></span>
+                                        <button type="button" @click="fnbModalQty[p.id] = Math.min(p.stock, (fnbModalQty[p.id] || 0) + 1)" :disabled="(fnbModalQty[p.id] || 0) >= p.stock" class="w-6 h-6 rounded bg-slate-100 font-bold hover:bg-slate-200 disabled:opacity-40">+</button>
+                                        <template x-if="(fnbModalQty[p.id] || 0) > 0">
+                                            <input type="hidden" :name="'items[' + p.id + '][product_id]'" :value="p.id">
+                                        </template>
+                                        <template x-if="(fnbModalQty[p.id] || 0) > 0">
+                                            <input type="hidden" :name="'items[' + p.id + '][qty]'" :value="fnbModalQty[p.id]">
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+
+                        <div class="flex justify-between items-center rounded-lg bg-slate-50 px-3 py-2 text-xs font-bold text-slate-900">
+                            <span>Total Tambahan:</span>
+                            <span class="text-emerald-700" x-text="formatRupiah(Object.keys(fnbModalQty).reduce((acc, id) => {
+                                const prod = products.find(p => p.id == id);
+                                return acc + (prod ? prod.sell_price * fnbModalQty[id] : 0);
+                            }, 0))"></span>
+                        </div>
+
+                        <div class="flex justify-end gap-2 pt-2">
+                            <button type="button" @click="modal = null" class="rounded-lg px-4 py-2 text-sm text-slate-600 hover:bg-slate-100">Batal</button>
+                            <button type="submit"
+                                    :disabled="Object.values(fnbModalQty).reduce((a, b) => a + b, 0) === 0"
+                                    class="rounded-lg bg-emerald-600 px-5 py-2 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-50 transition">
+                                Tambah ke Meja
+                            </button>
                         </div>
                     </form>
                 </template>

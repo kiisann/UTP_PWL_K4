@@ -6,7 +6,9 @@ use App\Http\Controllers\Admin\PricingPackageController;
 use App\Http\Controllers\Admin\ProductInventoryController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\ShiftAndUserController;
+use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FnbOrderController;
 use App\Http\Controllers\ReceiptController;
 use App\Http\Controllers\RentalSessionController;
 use App\Http\Controllers\ShiftController;
@@ -19,6 +21,7 @@ Route::get('/', function () {
 // Route Kasir
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 Route::get('/api/consoles/live-status', [DashboardController::class, 'liveStatus'])->name('api.consoles.live');
+Route::get('/api/fnb-products', [FnbOrderController::class, 'products'])->name('api.fnb-products');
 
 Route::post('/sessions/start', [RentalSessionController::class, 'start'])->name('sessions.start');
 Route::post('/sessions/{rentalSession}/extend', [RentalSessionController::class, 'extend'])->name('sessions.extend');
@@ -26,6 +29,14 @@ Route::post('/sessions/{rentalSession}/move', [RentalSessionController::class, '
 Route::post('/sessions/{rentalSession}/stop', [RentalSessionController::class, 'stop'])->name('sessions.stop');
 Route::post('/sessions/{rentalSession}/void', [RentalSessionController::class, 'void'])->name('sessions.void');
 Route::get('/sessions/{rentalSession}/receipt', [ReceiptController::class, 'show'])->name('sessions.receipt');
+
+// Pembayaran (Checkout) Sesi Rental
+Route::post('/sessions/{rentalSession}/checkout', [CheckoutController::class, 'checkoutSession'])->name('sessions.checkout');
+
+// Pemesanan F&B Sesi & Walk-in
+Route::post('/sessions/{rentalSession}/fnb', [FnbOrderController::class, 'orderForSession'])->name('sessions.fnb.store');
+Route::post('/fnb-orders/walk-in', [FnbOrderController::class, 'walkIn'])->name('fnb-orders.walk-in');
+Route::get('/fnb-orders/{fnbOrder}/receipt', [ReceiptController::class, 'showFnb'])->name('fnb-orders.receipt');
 
 Route::post('/shifts/open', [ShiftController::class, 'open'])->name('shifts.open');
 Route::post('/shifts/close', [ShiftController::class, 'close'])->name('shifts.close');

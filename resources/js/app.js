@@ -186,10 +186,27 @@ Alpine.data('dashboard', (cfg) => ({
     mode: 'package',
     packages: cfg.packages,
     available: cfg.available,
+    products: cfg.products || [],
     signature: cfg.signature,
     poller: null,
+    checkoutMethod: 'cash',
+    checkoutPaid: 0,
+    fnbModalQty: {},
+
+    formatRupiah(n) {
+        return 'Rp ' + Number(n || 0).toLocaleString('id-ID');
+    },
 
     init() {
+        this.$watch('modal', (val) => {
+            if (val && val.type === 'checkout') {
+                this.checkoutPaid = val.grand_total;
+                this.checkoutMethod = 'cash';
+            }
+            if (val && val.type === 'fnb') {
+                this.fnbModalQty = {};
+            }
+        });
         this.poller = setInterval(() => this.checkChanges(), 10000);
     },
 

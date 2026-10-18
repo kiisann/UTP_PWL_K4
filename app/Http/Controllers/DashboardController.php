@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\CashierShift;
 use App\Models\Console;
 use App\Models\PricingPackage;
+use App\Models\Product;
 use App\Services\BillingCalculatorService;
 use Illuminate\Support\Collection;
 
@@ -26,7 +27,6 @@ class DashboardController extends Controller
 
         $activeShift = CashierShift::open()->with('user')->latest('opened_at')->first();
 
-        
         $packages = PricingPackage::active()
             ->orderBy('duration_minutes')
             ->get()
@@ -39,23 +39,35 @@ class DashboardController extends Controller
             ])->values())
             ->toArray();
 
-        
         $availableConsoles = $consoles
             ->where('status', Console::AVAILABLE)
             ->map(fn ($c) => ['id' => $c->id, 'name' => $c->name])
             ->values()
             ->toArray();
 
-       
+        $products = Product::active()
+            ->orderBy('category')
+            ->orderBy('name')
+            ->get(['id', 'sku', 'name', 'category', 'sell_price', 'stock'])
+            ->map(fn ($p) => [
+                'id' => $p->id,
+                'sku' => $p->sku,
+                'name' => $p->name,
+                'category' => $p->category,
+                'sell_price' => (float) $p->sell_price,
+                'stock' => (int) $p->stock,
+            ])
+            ->values()
+            ->toArray();
+
         $serverNow = now()->getTimestamp() * 1000;
         $signature = $this->signature($consoles);
 
         return view('dashboard.index', compact(
-            'consoles', 'summary', 'activeShift', 'packages', 'availableConsoles', 'serverNow', 'signature'
+            'consoles', 'summary', 'activeShift', 'packages', 'availableConsoles', 'products', 'serverNow', 'signature'
         ));
     }
 
-    
     public function liveStatus()
     {
         $consoles = $this->loadConsoles();
@@ -82,6 +94,7 @@ class DashboardController extends Controller
                         'start_time' => $s->start_time->toIso8601String(),
                         'planned_end_time' => $s->planned_end_time?->toIso8601String(),
                         'actual_end_time' => $s->actual_end_time?->toIso8601String(),
+                        'is_stopped' => $s->actual_end_time !== null,
                         'remaining_seconds' => ($s->planned_end_time && ! $s->actual_end_time)
                             ? max(0, $s->planned_end_time->getTimestamp() - $now->getTimestamp())
                             : null,
@@ -103,7 +116,7 @@ class DashboardController extends Controller
 
     private function loadConsoles(): Collection
     {
-        return Console::with(['category', 'activeSession'])
+        return Console::with(['category', 'activeSession.package', 'activeSession.fnbOrders.items.product'])
             ->orderBy('code')
             ->get();
     }

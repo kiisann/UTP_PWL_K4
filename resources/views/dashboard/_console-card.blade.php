@@ -31,6 +31,32 @@
         'fnb' => (float) $session->fnb_amount,
         'discount' => (float) $session->discount_amount,
     ] : null;
+    $selectedPayload = [
+        'id' => $console->id,
+        'code' => $console->code,
+        'name' => $console->name,
+        'status' => $console->status,
+        'category_name' => $console->category->name,
+        'hourly_rate' => (float) $console->category->hourly_rate,
+        'session' => $session ? [
+            'id' => $session->id,
+            'invoice_number' => $session->invoice_number,
+            'customer_name' => $session->customer_name,
+            'billing_mode' => $session->billing_mode,
+            'start_time' => $session->start_time->format('H:i'),
+            'rental_amount' => (float) $session->rental_amount,
+            'fnb_amount' => (float) $session->fnb_amount,
+            'discount_amount' => (float) $session->discount_amount,
+            'grand_total' => (float) $session->grand_total,
+            'stopped' => (bool) $stopped,
+            'fnb_items' => $session->fnbOrders->filter(fn ($o) => $o->order_status !== 'void')->flatMap(fn ($o) => $o->items)->map(fn ($it) => [
+                'name' => $it->product->name ?? 'F&B',
+                'qty' => (int) $it->qty,
+                'unit_price' => (float) $it->unit_price,
+                'subtotal' => (float) $it->subtotal,
+            ])->values()->all(),
+        ] : null,
+    ];
 @endphp
 
 <div
@@ -49,7 +75,7 @@
         :class="selected && selected.id === {{ $console->id }} ? 'ring-4 ring-indigo-400' : ''"
         class="cursor-pointer rounded-2xl border-2 p-4 shadow-sm transition {{ $card }}"
     @endif
-    @click="selected = @js(['id' => $console->id, 'name' => $console->name])"
+    @click="selected = @js($selectedPayload)"
 >
     <div class="flex items-start justify-between gap-2">
         <div>
@@ -103,8 +129,10 @@
 
         @if ($stopped)
             <div class="mt-3 text-xs">
-                <button type="button" disabled class="w-full rounded-lg bg-indigo-600 py-2 font-semibold text-white opacity-60">
-                    Bayar (bagian Niko)
+                <button type="button"
+                        @click.stop="modal = { type: 'checkout', session_id: {{ $session->id }}, console: @js($consolePayload), grand_total: {{ $session->grand_total }}, rental: {{ $session->rental_amount }}, fnb: {{ $session->fnb_amount }} }"
+                        class="w-full rounded-lg bg-emerald-600 py-2.5 font-bold text-white shadow-sm hover:bg-emerald-700 transition">
+                    Bayar ({{ $rupiah($session->grand_total) }})
                 </button>
                 <a href="{{ route('sessions.receipt', $session) }}" target="_blank" @click.stop
                    class="mt-2 block text-center underline opacity-70 hover:opacity-100">Pratinjau struk</a>
@@ -114,7 +142,9 @@
                 class="mt-2 w-full text-center text-xs underline opacity-70 hover:opacity-100">Batalkan sesi (void)</button>
         @else
             <div class="mt-3 grid grid-cols-2 gap-2 text-xs">
-                <button type="button" disabled class="rounded-lg bg-white/70 py-2 font-semibold opacity-60">+ F&amp;B</button>
+                <button type="button"
+                        @click.stop="modal = { type: 'fnb', session_id: {{ $session->id }}, console: @js($consolePayload) }"
+                        class="rounded-lg bg-white border border-slate-200 py-2 font-semibold text-slate-800 hover:bg-emerald-50 hover:text-emerald-800 hover:border-emerald-300 transition">+ F&amp;B</button>
 
                 @if ($isPackage)
                     <button type="button"

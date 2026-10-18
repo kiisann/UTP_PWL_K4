@@ -81,4 +81,28 @@ class ReceiptController extends Controller
             'payment' => $s->payment,
         ]);
     }
+
+    /**
+     * Struk pesanan F&B Walk-in (tanpa rental PS).
+     */
+    public function showFnb(Request $request, \App\Models\FnbOrder $fnbOrder)
+    {
+        $order = $fnbOrder->load(['shift.user', 'payments', 'items.product']);
+
+        $width = (int) $request->query('width', config('rental.receipt_width'));
+        $width = in_array($width, [58, 80], true) ? $width : 58;
+
+        $now = now();
+        $payment = $order->payments()->latest('paid_at')->first();
+
+        return view('receipts.walkin', [
+            'order' => $order,
+            'width' => $width,
+            'autoPrint' => $request->boolean('print'),
+            'store' => config('rental'),
+            'printedAt' => $now,
+            'payment' => $payment,
+        ]);
+    }
 }
+
